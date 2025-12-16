@@ -396,3 +396,649 @@ small { color:#6b7280; }
 .heart { font-size:22px; color:#aaa; line-height:1; }
 .heart.liked { color:#FF6B6B; }
 .like-count { min-width:24px; color:#666; }
+
+.pairs-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.pair-card{
+  height:96px;
+  border-radius:16px;
+  border:none;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  background:#fff;
+  font-size:20px;
+  cursor:pointer;
+  transition:transform .15s;
+}
+
+.pair-card:hover{ transform:scale(1.03); }
+
+.pair-card.selected{
+  background:#4A90E2;
+  color:#fff;
+  transform:scale(1.05);
+}
+
+.pair-card.matched{
+  background:linear-gradient(135deg,#7ED321,#5BA3D0);
+  color:#fff;
+  opacity:.6;
+  transform:scale(.97);
+}
+.grid-colors{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.color-btn{
+  height:120px;
+  border:none;
+  border-radius:18px;
+  color:#fff;
+  font-size:18px;
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
+  cursor:pointer;
+  transition:transform .15s;
+}
+.color-btn:hover{ transform:scale(1.03); }
+.color-btn.active{ transform:scale(1.08); filter:brightness(1.1); }
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+.btn-back{
+  border:none;
+  background:transparent;
+  font-size:20px;
+  cursor:pointer;
+}
+
+/* =========================
+   Base / Reset
+========================= */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #f2f4f7;
+  color: #222;
+}
+
+/* =========================
+   Phone frame (tu wrapper)
+========================= */
+.phone {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #f2f4f7;
+  position: relative;
+  padding-bottom: 86px; /* espacio para bottom nav */
+}
+
+/* =========================
+   Common layout
+========================= */
+.screen {
+  padding: 20px;
+}
+
+h1, h2, h3 {
+  margin: 0 0 10px 0;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+p { margin: 0 0 10px 0; }
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.06);
+  border: 1px solid rgba(0,0,0,.04);
+}
+
+/* =========================
+   Buttons
+========================= */
+.btn {
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #4A90E2;
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(74,144,226,.25);
+  transition: transform .08s ease, filter .15s ease, opacity .15s ease;
+}
+
+.btn:hover { filter: brightness(0.98); }
+.btn:active { transform: scale(0.98); }
+
+.btn.secondary {
+  background: #ffffff;
+  color: #2b2b2b;
+  border: 2px solid rgba(0,0,0,.10);
+  box-shadow: 0 10px 18px rgba(0,0,0,.06);
+}
+
+.btn.secondary:hover { background: #f7f7f7; }
+
+.btn.gray {
+  background: #a9b2bd;
+  color: #fff;
+  box-shadow: none;
+}
+
+.btn.disabled,
+.btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 2px solid rgba(0,0,0,.10);
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* Danger variants */
+.btn.secondary.danger {
+  border-color: rgba(192,57,43,.35);
+  color: #c0392b;
+}
+
+.btn.danger-solid {
+  background: #e74c3c;
+  box-shadow: 0 10px 18px rgba(231,76,60,.25);
+}
+
+/* =========================
+   Welcome
+========================= */
+.welcome {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #4A90E2, #6BA8E8);
+  padding: 24px;
+}
+
+.welcome-container {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.welcome-logo {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 26px rgba(0,0,0,.25));
+  margin-bottom: 16px;
+}
+
+.welcome-title {
+  color: #fff;
+  font-size: 44px;
+  margin: 0 0 8px 0;
+}
+
+.welcome-subtitle {
+  color: rgba(255,255,255,.92);
+  font-size: 18px;
+  margin-bottom: 22px;
+}
+
+.welcome-button {
+  width: 100%;
+  max-width: 260px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,.85);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease;
+}
+
+.welcome-button:hover { background: rgba(255,255,255,.18); }
+.welcome-button:active { transform: scale(0.98); }
+
+/* =========================
+   Bottom navigation
+========================= */
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  width: min(420px, calc(100% - 24px));
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 18px 30px rgba(0,0,0,.14);
+  border: 1px solid rgba(0,0,0,.06);
+  padding: 8px 10px;
+  display: flex;
+  gap: 8px;
+  z-index: 20;
+}
+
+.bottom-nav.hidden { display: none; }
+
+.nav-btn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 10px 8px;
+  border-radius: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-weight: 800;
+  color: #555;
+  transition: background .15s ease, transform .08s ease;
+}
+
+.nav-btn span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nav-btn:hover { background: #f4f7ff; }
+.nav-btn:active { transform: scale(0.98); }
+
+.nav-btn.active {
+  background: linear-gradient(135deg, #4A90E2, #5BA3D0);
+  color: #fff;
+}
+
+/* =========================
+   Topbar (games screens)
+========================= */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.topbar h2 {
+  margin: 0;
+  font-size: 22px;
+  text-align: center;
+  flex: 1;
+}
+
+/* =========================
+   Sequences game
+========================= */
+.grid-colors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.color-btn {
+  height: 120px;
+  border-radius: 22px;
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  box-shadow: 0 14px 24px rgba(0,0,0,.12);
+  transition: transform .08s ease, filter .15s ease, opacity .15s ease;
+}
+
+.color-btn:hover { filter: brightness(0.98); }
+.color-btn:active { transform: scale(0.98); }
+
+.color-btn.active {
+  transform: scale(1.06);
+  box-shadow: 0 20px 30px rgba(0,0,0,.18);
+}
+
+/* =========================
+   Pairs game
+========================= */
+.pairs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pair-card {
+  height: 92px;
+  border-radius: 18px;
+  border: 0;
+  cursor: pointer;
+  background: #fff;
+  box-shadow: 0 12px 22px rgba(0,0,0,.08);
+  font-size: 22px;
+  font-weight: 900;
+  transition: transform .08s ease, filter .15s ease, opacity .15s ease;
+}
+
+.pair-card:hover { transform: scale(1.02); }
+.pair-card:active { transform: scale(0.98); }
+
+.pair-card.selected {
+  background: #4A90E2;
+  color: #fff;
+  transform: scale(1.03);
+}
+
+.pair-card.matched {
+  background: linear-gradient(135deg, #7ED321, #5BA3D0);
+  color: #fff;
+  opacity: .65;
+  transform: scale(0.98);
+  cursor: not-allowed;
+}
+
+/* =========================
+   Mood history chart
+========================= */
+.mood-chart {
+  height: 260px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: end;
+  gap: 10px;
+  padding: 8px 6px 0 6px;
+  background: linear-gradient(180deg, #f7fbff, #ffffff);
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,.05);
+}
+
+.mood-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.mood-bar-fill {
+  width: 100%;
+  max-width: 36px;
+  border-radius: 12px 12px 0 0;
+  background: #4A90E2;
+  box-shadow: 0 12px 20px rgba(74,144,226,.25);
+  transition: height .2s ease;
+}
+
+.mood-bar span {
+  font-size: 12px;
+  font-weight: 800;
+  color: #555;
+}
+
+.mood-feedback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mood-feedback .emoji {
+  font-size: 42px;
+}
+
+/* =========================
+   Community
+========================= */
+.msg-card p { line-height: 1.35; }
+
+.msg-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.msg-author {
+  font-weight: 800;
+  color: #666;
+}
+
+.like-btn {
+  border: 0;
+  background: #f6f6f6;
+  border-radius: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background .15s ease, transform .08s ease;
+}
+
+.like-btn:hover { background: #ededed; }
+.like-btn:active { transform: scale(0.98); }
+
+.heart {
+  font-size: 20px;
+  color: #b7b7b7;
+}
+
+.heart.liked { color: #ff6b6b; }
+
+.like-count {
+  min-width: 22px;
+  text-align: right;
+  font-weight: 900;
+  color: #666;
+}
+
+/* =========================
+   Profile
+========================= */
+.profile-card { padding: 18px; }
+
+.profile-header {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.profile-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #4A90E2, #7ED321);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 14px 22px rgba(0,0,0,.12);
+}
+
+.profile-avatar img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.profile-welcome { flex: 1; }
+
+.profile-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-field {
+  background: #F5F9FF;
+  border-radius: 18px;
+  padding: 12px;
+  border: 1px solid rgba(74,144,226,.18);
+}
+
+.pf-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.pf-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #222;
+}
+
+.pf-input {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 2px solid rgba(74,144,226,.55);
+  outline: none;
+  font-size: 16px;
+  font-weight: 800;
+  background: #fff;
+}
+
+.pf-input:focus {
+  border-color: rgba(126,211,33,.75);
+  box-shadow: 0 0 0 4px rgba(126,211,33,.18);
+}
+
+.profile-danger {
+  border: 2px solid rgba(231,76,60,.18);
+}
+
+/* =========================
+   Appointments (perfil)
+========================= */
+.apt-card {
+  background: linear-gradient(135deg, #F5F9FF, #E8F4FD);
+  border-radius: 18px;
+  padding: 14px;
+  border: 2px solid rgba(74,144,226,.55);
+}
+
+.apt-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.apt-doctor { font-size: 40px; }
+
+.apt-info { flex: 1; }
+
+.apt-name {
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.apt-sub {
+  color: #666;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.apt-details {
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,.06);
+  margin-bottom: 12px;
+  font-weight: 800;
+  color: #333;
+  display: grid;
+  gap: 6px;
+}
+
+/* =========================
+   Modal
+========================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  width: min(380px, 100%);
+  background: #fff;
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 24px 50px rgba(0,0,0,.25);
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+.modal-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 999px;
+  background: rgba(231,76,60,.12);
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  margin: 0 auto 12px auto;
+}
+
+/* =========================
+   Inputs/textarea general
+========================= */
+textarea {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  border: 2px solid rgba(0,0,0,.10);
+  outline: none;
+}
+
+textarea:focus {
+  border-color: rgba(74,144,226,.60);
+  box-shadow: 0 0 0 4px rgba(74,144,226,.14);
+}
+
+/* =========================
+   Small helpers
+========================= */
+small { color: #666; font-weight: 700; }
