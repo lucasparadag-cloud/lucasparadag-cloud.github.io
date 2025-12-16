@@ -7,6 +7,15 @@ const state = {
   appointments: []
 };
 
+// ✅ Estado pantalla especialistas (FALTABA)
+const specialistsState = {
+  selectedSpecialist: null,
+  showScheduling: false,
+  selectedDate: null,
+  selectedTime: null,
+  showConfirmation: false
+};
+
 // --- Helpers ---
 const $app = document.getElementById('app');
 const $bottomNav = document.getElementById('bottomNav');
@@ -69,14 +78,32 @@ function cancelAppointment(appointmentId) {
 // --- Pantallas (equivalente a componentes React) ---
 function WelcomeScreen() {
   return `
-    <section class="screen">
-      <h1>Bienvenido 👋</h1>
-      <p>Esta es tu app en HTML + JS (sin React).</p>
-      <button class="btn" id="startBtn">Comenzar</button>
+    <section class="welcome">
+      <div class="welcome-container">
+
+        <div class="welcome-block">
+          <div class="welcome-logo-wrap">
+            <img
+              src="logo.png"
+              alt="Nirvana Logo"
+              class="welcome-logo"
+            />
+          </div>
+
+          <h1 class="welcome-title">Nirvana</h1>
+          <p class="welcome-subtitle">Bienestar emocional para adultos mayores</p>
+        </div>
+
+        <button class="welcome-button" id="startBtn">
+          Comenzar
+        </button>
+
+      </div>
     </section>
   `;
 }
 
+// ✅ HomeScreen (te faltaba en lo que pegaste)
 function HomeScreen() {
   return `
     <section class="screen">
@@ -212,17 +239,223 @@ function RelaxationMusicScreen() {
 }
 
 function SpecialistsScreen() {
-  return `
-    <section class="screen">
-      <h1>Especialistas</h1>
-      <p>Reserva una cita de prueba:</p>
-      <div class="row">
-        <button class="btn" id="bookAptBtn">Reservar cita</button>
-        <button class="btn secondary" data-go="profile">Ver perfil</button>
+  const specialists = [
+    { id: 1, name: 'Dra. María Carmen López', specialty: 'Psicóloga Clínica especializada en adultos mayores', experience: '15 años de experiencia', rating: 4.9, available: true,  photo: '👩‍⚕️' },
+    { id: 2, name: 'Dr. Roberto Martínez',      specialty: 'Terapeuta de ansiedad y estrés',               experience: '12 años de experiencia', rating: 4.8, available: true,  photo: '👨‍⚕️' },
+    { id: 3, name: 'Dra. Ana Fernández',        specialty: 'Psicóloga Geriátrica',                         experience: '20 años de experiencia', rating: 5.0, available: false, photo: '👩‍⚕️' },
+    { id: 4, name: 'Dr. Carlos Sánchez',        specialty: 'Terapeuta cognitivo-conductual',              experience: '10 años de experiencia', rating: 4.7, available: true,  photo: '👨‍⚕️' },
+  ];
+
+  const availableTimes = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00'];
+
+  function getAvailableDates() {
+    const dates = [];
+    const today = new Date();
+    let daysChecked = 0;
+    while (dates.length < 7 && daysChecked < 14) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + daysChecked);
+      const day = d.getDay();
+      if (day !== 0 && day !== 6) {
+        const short = d.toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' });
+        const full  = d.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+        dates.push({ short, full });
+      }
+      daysChecked++;
+    }
+    return dates;
+  }
+
+  // --- VISTA 1: Confirmación ---
+  if (specialistsState.showConfirmation && specialistsState.selectedSpecialist && specialistsState.selectedDate && specialistsState.selectedTime) {
+    const s = specialistsState.selectedSpecialist;
+
+    return `
+      <section class="screen sp">
+        <div class="sp-topbar">
+          <button class="sp-back" id="spBackBtn">←</button>
+          <h2>Cita Confirmada</h2>
+          <div class="sp-spacer"></div>
+        </div>
+
+        <div class="sp-hero green">
+          <div class="sp-hero-icon">✅</div>
+          <h3>¡Cita Agendada!</h3>
+          <p>Tu cita ha sido confirmada exitosamente</p>
+        </div>
+
+        <div class="sp-card">
+          <h3 class="sp-center">Detalles de la Cita</h3>
+
+          <div class="sp-split">
+            <div class="sp-photo">${s.photo}</div>
+            <div>
+              <p class="sp-name">${escapeHtml(s.name)}</p>
+              <p class="sp-muted">${escapeHtml(s.specialty)}</p>
+            </div>
+          </div>
+
+          <div class="sp-info">
+            <div class="sp-info-row">
+              <span class="sp-info-ico">📅</span>
+              <div>
+                <div class="sp-small">Fecha</div>
+                <div>${escapeHtml(specialistsState.selectedDate)}</div>
+              </div>
+            </div>
+            <div class="sp-info-row">
+              <span class="sp-info-ico">🕒</span>
+              <div>
+                <div class="sp-small">Hora</div>
+                <div>${escapeHtml(specialistsState.selectedTime)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sp-reminder">
+            <h3 class="sp-center">Recordatorio</h3>
+            <p>✉️ Te enviaremos un recordatorio por correo</p>
+            <p>📞 Y te llamaremos 1 día antes de tu cita</p>
+          </div>
+        </div>
+
+        <div class="sp-actions">
+          <button class="btn" id="spGoProfileBtn">Ver mis Citas en Perfil</button>
+          <button class="btn secondary" id="spGoAssistantBtn">Volver al Asistente</button>
+        </div>
+      </section>
+    `;
+  }
+
+  // --- VISTA 2: Agendar ---
+  if (specialistsState.showScheduling && specialistsState.selectedSpecialist) {
+    const s = specialistsState.selectedSpecialist;
+    const dates = getAvailableDates();
+
+    const datesHTML = dates.map(d => {
+      const active = specialistsState.selectedDate === d.full;
+      return `
+        <button class="sp-pick ${active ? 'active-blue' : ''}" data-pick-date="${escapeHtml(d.full)}">
+          <div class="sp-pick-text">${escapeHtml(d.short)}</div>
+        </button>
+      `;
+    }).join('');
+
+    const timesHTML = availableTimes.map(t => {
+      const active = specialistsState.selectedTime === t;
+      return `
+        <button class="sp-pick ${active ? 'active-green' : ''}" data-pick-time="${t}">
+          <div class="sp-pick-text">${t}</div>
+        </button>
+      `;
+    }).join('');
+
+    const summaryHTML = (specialistsState.selectedDate && specialistsState.selectedTime) ? `
+      <div class="sp-hero blue">
+        <h3 class="sp-center">Resumen de tu Cita</h3>
+        <p class="sp-center">📅 ${escapeHtml(specialistsState.selectedDate)}</p>
+        <p class="sp-center">🕐 ${escapeHtml(specialistsState.selectedTime)}</p>
+        <p class="sp-center">con ${escapeHtml(s.name)}</p>
       </div>
-      <small>Esto es demo: crea una cita ficticia.</small>
+    ` : '';
+
+    return `
+      <section class="screen sp">
+        <div class="sp-topbar">
+          <button class="sp-back" id="spBackBtn">←</button>
+          <h2>Agendar Cita</h2>
+          <div class="sp-spacer"></div>
+        </div>
+
+        <div class="sp-card">
+          <div class="sp-split">
+            <div class="sp-photo">${s.photo}</div>
+            <div>
+              <p class="sp-name">${escapeHtml(s.name)}</p>
+              <p class="sp-muted">${escapeHtml(s.specialty)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="sp-card">
+          <h3>📅 Selecciona una Fecha</h3>
+          <div class="sp-grid2">
+            ${datesHTML}
+          </div>
+        </div>
+
+        ${specialistsState.selectedDate ? `
+          <div class="sp-card">
+            <h3>🕒 Selecciona una Hora</h3>
+            <div class="sp-grid2">
+              ${timesHTML}
+            </div>
+          </div>
+        ` : ''}
+
+        ${summaryHTML}
+
+        <button class="btn sp-confirm ${(!specialistsState.selectedDate || !specialistsState.selectedTime) ? 'disabled' : ''}" id="spConfirmBtn">
+          ✅ Confirmar Cita
+        </button>
+      </section>
+    `;
+  }
+
+  // --- VISTA 3: Lista de especialistas ---
+  const listHTML = specialists.map(s => `
+    <div class="sp-card">
+      <div class="sp-split">
+        <div class="sp-photo">${s.photo}</div>
+        <div class="sp-flex">
+          <h3 class="sp-name">${escapeHtml(s.name)}</h3>
+          <p class="sp-muted">${escapeHtml(s.specialty)}</p>
+          <p class="sp-muted2">${escapeHtml(s.experience)}</p>
+          <div class="sp-rating">⭐ <span>${s.rating.toFixed(1)}</span></div>
+        </div>
+      </div>
+
+      ${
+        s.available
+        ? `<button class="btn" data-request="${s.id}">📅 Agendar Cita</button>`
+        : `<button class="btn gray" disabled>No disponible</button>`
+      }
+    </div>
+  `).join('');
+
+  return `
+    <section class="screen sp">
+      <div class="sp-topbar">
+        <button class="sp-back" id="spGoAssistantBtn">←</button>
+        <h2>Especialistas</h2>
+        <div class="sp-spacer"></div>
+      </div>
+
+      <div class="sp-hero blue">
+        <h3>Apoyo Profesional</h3>
+        <p>Conecta con especialistas certificados en salud mental para adultos mayores</p>
+      </div>
+
+      <div class="sp-stack">
+        ${listHTML}
+      </div>
+
+      <div id="spData" data-json='${escapeAttr(JSON.stringify(specialists))}' style="display:none"></div>
     </section>
   `;
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'",'&#039;');
+  }
+
+  function escapeAttr(str){
+    return String(str).replaceAll("'", "&apos;").replaceAll('"', "&quot;");
+  }
 }
 
 function ProfileScreen() {
@@ -259,17 +492,14 @@ function getBottomNavScreen() {
 }
 
 function render() {
-  // mostrar/ocultar bottom nav
   const showBottomNav = state.currentScreen !== 'welcome';
   $bottomNav.classList.toggle('hidden', !showBottomNav);
 
-  // activar tab actual
   const active = getBottomNavScreen();
   [...$bottomNav.querySelectorAll('.nav-btn')].forEach(btn => {
     btn.classList.toggle('active', btn.dataset.screen === active);
   });
 
-  // pantalla
   let html = '';
   switch (state.currentScreen) {
     case 'welcome': html = WelcomeScreen(); break;
@@ -291,8 +521,6 @@ function render() {
   }
 
   $app.innerHTML = html;
-
-  // eventos de la pantalla actual
   wireScreenEvents();
 }
 
@@ -331,23 +559,80 @@ function wireScreenEvents() {
   const deleteAllBtn = document.getElementById('deleteAllBtn');
   if (deleteAllBtn) deleteAllBtn.addEventListener('click', deleteAllData);
 
-  // specialists -> reservar cita demo
-  const bookAptBtn = document.getElementById('bookAptBtn');
-  if (bookAptBtn) {
-    bookAptBtn.addEventListener('click', () => {
-      bookAppointment({
-        id: Date.now(),
-        name: 'Psicóloga Demo',
-        date: new Date().toLocaleString('es-CL')
-      });
-      navigate('profile');
-    });
-  }
-
   // cancelar citas
   $app.querySelectorAll('[data-cancel]').forEach(btn => {
     btn.addEventListener('click', () => cancelAppointment(Number(btn.dataset.cancel)));
   });
+
+  // ✅ Specialists events (FALTABA)
+  const spGoAssistantBtn = document.getElementById('spGoAssistantBtn');
+  if (spGoAssistantBtn) spGoAssistantBtn.addEventListener('click', () => navigate('assistant'));
+
+  const spGoProfileBtn = document.getElementById('spGoProfileBtn');
+  if (spGoProfileBtn) spGoProfileBtn.addEventListener('click', () => navigate('profile'));
+
+  const spBackBtn = document.getElementById('spBackBtn');
+  if (spBackBtn) spBackBtn.addEventListener('click', () => {
+    specialistsState.showScheduling = false;
+    specialistsState.showConfirmation = false;
+    specialistsState.selectedSpecialist = null;
+    specialistsState.selectedDate = null;
+    specialistsState.selectedTime = null;
+    render();
+  });
+
+  // pedir agendar desde lista
+  $app.querySelectorAll('[data-request]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dataEl = document.getElementById('spData');
+      const specialists = dataEl ? JSON.parse(dataEl.dataset.json) : [];
+      const id = Number(btn.dataset.request);
+      const found = specialists.find(x => x.id === id);
+      if (!found) return;
+
+      specialistsState.selectedSpecialist = found;
+      specialistsState.showScheduling = true;
+      specialistsState.showConfirmation = false;
+      specialistsState.selectedDate = null;
+      specialistsState.selectedTime = null;
+      render();
+    });
+  });
+
+  // seleccionar fecha
+  $app.querySelectorAll('[data-pick-date]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      specialistsState.selectedDate = btn.dataset.pickDate;
+      specialistsState.selectedTime = null;
+      render();
+    });
+  });
+
+  // seleccionar hora
+  $app.querySelectorAll('[data-pick-time]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      specialistsState.selectedTime = btn.dataset.pickTime;
+      render();
+    });
+  });
+
+  // confirmar cita
+  const spConfirmBtn = document.getElementById('spConfirmBtn');
+  if (spConfirmBtn) {
+    spConfirmBtn.addEventListener('click', () => {
+      if (!specialistsState.selectedSpecialist) return;
+      if (!specialistsState.selectedDate || !specialistsState.selectedTime) return;
+
+      bookAppointment({
+        id: Date.now(),
+        name: specialistsState.selectedSpecialist.name,
+        date: `${specialistsState.selectedDate} — ${specialistsState.selectedTime}`
+      });
+
+      specialistsState.showConfirmation = true;
+      render();
+    });
+  }
 }
 
 // --- Bottom nav click ---
