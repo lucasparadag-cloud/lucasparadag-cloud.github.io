@@ -22,11 +22,17 @@ const state = {
     locked: false
   },
 
-  // Assistant (local chat)
+  // Assistant (chat local)
   assistant: {
     messages: [
       { role: 'bot', text: 'Hola 👋 Soy tu asistente. ¿En qué te ayudo hoy?' }
     ]
+  },
+
+  // Relaxation
+  relaxation: {
+    selectedTrackId: null,
+    isPlaying: false
   },
 
   // Juegos simples
@@ -44,7 +50,6 @@ const state = {
   sequences: {
     level: 1,
     target: [],
-    user: [],
     showResult: null // 'ok' | 'fail' | null
   },
 
@@ -76,9 +81,9 @@ function navigate(screen) {
   state.currentScreen = screen;
 
   if (screen === 'memory-game') initMemoryGame();
+  if (screen === 'pairs-game') initPairs();
   if (screen === 'sequences-game') initSequences();
   if (screen === 'words-game') initWords();
-  if (screen === 'pairs-game') initPairs();
 
   render();
 }
@@ -112,11 +117,22 @@ function likeMessage(messageId) {
   render();
 }
 
+function bookAppointment(appointment) {
+  state.appointments.push(appointment);
+}
+
+function cancelAppointment(appointmentId) {
+  state.appointments = state.appointments.filter(a => a.id !== appointmentId);
+  render();
+}
+
 function deleteAllData() {
   state.moodData = [];
   state.selectedMood = null;
+
   state.communityMessages = [];
   state.likedMessages = new Set();
+
   state.appointments = [];
 
   specialistsState.selectedSpecialist = null;
@@ -129,19 +145,12 @@ function deleteAllData() {
 
   state.assistant.messages = [{ role: 'bot', text: 'Datos borrados ✅ ¿En qué te ayudo ahora?' }];
 
+  state.relaxation = { selectedTrackId: null, isPlaying: false };
+
   initPairs();
   initSequences();
   initWords();
 
-  render();
-}
-
-function bookAppointment(appointment) {
-  state.appointments.push(appointment);
-}
-
-function cancelAppointment(appointmentId) {
-  state.appointments = state.appointments.filter(a => a.id !== appointmentId);
   render();
 }
 
@@ -215,67 +224,6 @@ function initPairs() {
   state.pairs.matched = new Set();
 }
 
-function PairsGameScreen() {
-  const items = state.pairs.targetPairs;
-  const left = items.map((p, i) => {
-    const done = state.pairs.matched.has(i);
-    const active = state.pairs.selectedLeft === i;
-    return `
-      <button class="word-chip ${active ? 'active' : ''}" data-pair-left="${i}" type="button" ${done ? 'disabled' : ''}>
-        ${escapeHtml(p.left)} ${done ? '✅' : ''}
-      </button>
-    `;
-  }).join('');
-
-  // mezclar derechos sin romper el índice original
-  const rights = items
-    .map((p, i) => ({ i, right: p.right }))
-    .sort(() => Math.random() - 0.5)
-    .map(x => {
-      const done = state.pairs.matched.has(x.i);
-      return `
-        <button class="word-chip" data-pair-right="${x.i}" type="button" ${done ? 'disabled' : ''}>
-          ${escapeHtml(x.right)}
-        </button>
-      `;
-    }).join('');
-
-  const allDone = state.pairs.matched.size === items.length;
-
-  return `
-    <section class="screen">
-      <div class="topbar">
-        <button class="back-btn" data-go="games" type="button">←</button>
-        <h2 class="title-center">Pares</h2>
-        <div class="spacer"></div>
-      </div>
-
-      <div class="hero blue" style="text-align:center">
-        <h3>Une palabra con su símbolo</h3>
-        <p>Primero toca una palabra, luego toca su símbolo.</p>
-      </div>
-
-      ${allDone ? `
-        <div class="hero green" style="text-align:center">
-          <h3>¡Excelente! 🎉</h3>
-          <p>Completaste todos los pares.</p>
-          <button class="btn full" id="pairsResetBtn" type="button">Jugar de nuevo</button>
-        </div>
-      ` : ''}
-
-      <div class="card">
-        <h3>Palabras</h3>
-        <div class="word-grid">${left}</div>
-      </div>
-
-      <div class="card">
-        <h3>Símbolos</h3>
-        <div class="word-grid">${rights}</div>
-      </div>
-    </section>
-  `;
-}
-
 function handlePairLeft(i) {
   state.pairs.selectedLeft = i;
   render();
@@ -294,63 +242,11 @@ function handlePairRight(i) {
 // Juego Secuencias (simple)
 // =========================
 function initSequences() {
-  // genera una secuencia simple por nivel (ej: 2,4,6,?,10)
   const level = state.sequences.level;
   const start = 2 + (level - 1);
   const step = 2;
-  const seq = [start, start + step, start + step * 2, null, start + step * 4];
-  state.sequences.target = seq;
-  state.sequences.user = [];
+  state.sequences.target = [start, start + step, start + step * 2, null, start + step * 4];
   state.sequences.showResult = null;
-}
-
-function SequencesGameScreen() {
-  const seq = state.sequences.target;
-  const missingAnswer = seq[2] + 2; // para este patrón fijo
-  const options = [missingAnswer, missingAnswer + 2, missingAnswer - 2, missingAnswer + 4]
-    .sort(() => Math.random() - 0.5);
-
-  const seqHtml = seq.map((n, idx) => `
-    <div class="seq-item">${n == null ? '❓' : n}</div>
-  `).join('');
-
-  const optsHtml = options.map(n => `
-    <button class="btn full" data-seq-pick="${n}" type="button">${n}</button>
-  `).join('');
-
-  return `
-    <section class="screen">
-      <div class="topbar">
-        <button class="back-btn" data-go="games" type="button">←</button>
-        <h2 class="title-center">Secuencias</h2>
-        <div class="spacer"></div>
-      </div>
-
-      <div class="hero blue" style="text-align:center">
-        <h3>Completa la secuencia</h3>
-        <p>Elige el número que falta.</p>
-      </div>
-
-      <div class="card">
-        <div class="sequence">${seqHtml}</div>
-      </div>
-
-      ${state.sequences.showResult === 'ok' ? `
-        <div class="hero green" style="text-align:center">
-          <h3>¡Correcto! ✅</h3>
-          <button class="btn full" id="seqNextBtn" type="button">Siguiente</button>
-        </div>
-      ` : state.sequences.showResult === 'fail' ? `
-        <div class="hero red" style="text-align:center">
-          <h3>Ups 😅</h3>
-          <p>Intenta de nuevo.</p>
-          <button class="btn full" id="seqRetryBtn" type="button">Reintentar</button>
-        </div>
-      ` : `
-        <div class="row">${optsHtml}</div>
-      `}
-    </section>
-  `;
 }
 
 function pickSequence(value) {
@@ -375,45 +271,6 @@ function initWords() {
   state.words.goal = 3;
 }
 
-function WordsGameScreen() {
-  const pool = state.words.pool;
-  const picked = new Set(state.words.picked);
-
-  const chips = pool.map(w => `
-    <button class="word-chip ${picked.has(w) ? 'active' : ''}" data-word="${escapeHtml(w)}" type="button" ${state.words.done ? 'disabled' : ''}>
-      ${escapeHtml(w)}
-    </button>
-  `).join('');
-
-  return `
-    <section class="screen">
-      <div class="topbar">
-        <button class="back-btn" data-go="games" type="button">←</button>
-        <h2 class="title-center">Palabras</h2>
-        <div class="spacer"></div>
-      </div>
-
-      <div class="hero blue" style="text-align:center">
-        <h3>Elige ${state.words.goal} palabras</h3>
-        <p>Selecciona palabras que te hagan sentir bien.</p>
-      </div>
-
-      ${state.words.done ? `
-        <div class="hero green" style="text-align:center">
-          <h3>¡Listo! 🌟</h3>
-          <p>Elegiste: <b>${escapeHtml(state.words.picked.join(', '))}</b></p>
-          <button class="btn full" id="wordsResetBtn" type="button">Jugar de nuevo</button>
-        </div>
-      ` : `
-        <div class="card">
-          <h3>Palabras</h3>
-          <div class="grid2">${chips}</div>
-        </div>
-      `}
-    </section>
-  `;
-}
-
 function toggleWord(word) {
   if (state.words.done) return;
   const idx = state.words.picked.indexOf(word);
@@ -425,20 +282,19 @@ function toggleWord(word) {
 }
 
 // =========================
-// Assistant (local chatbot)
+// Assistant (chat local)
 // =========================
 function assistantReply(userText) {
   const t = userText.toLowerCase();
 
-  // respuestas simples tipo “IA local”
   if (t.includes('hola')) return 'Hola 😊 ¿Cómo te sientes hoy?';
   if (t.includes('ans') || t.includes('ansiedad')) return 'Respiremos juntos: inhala 4s, sostiene 2s, exhala 6s. ¿Quieres que te guíe 1 minuto?';
-  if (t.includes('triste') || t.includes('pena')) return 'Lo siento. ¿Te gustaría contarme qué pasó? También podemos hacer una actividad corta de relajación.';
+  if (t.includes('triste') || t.includes('pena')) return 'Lo siento. ¿Quieres contarme qué pasó? También podemos hacer un juego o relajación.';
   if (t.includes('juego')) return 'Puedes ir a Juegos 🎮 y probar Memoria, Pares, Secuencias o Palabras.';
-  if (t.includes('cita') || t.includes('especialista')) return 'Ve a Especialistas y agenda una cita. Si quieres, te digo cómo hacerlo paso a paso.';
+  if (t.includes('cita') || t.includes('especialista')) return 'En Especialistas puedes agendar una cita. ¿Quieres que te guíe?';
   if (t.includes('gracias')) return 'De nada 💙 Estoy contigo.';
 
-  return 'Te leo. ¿Prefieres hablar de cómo te sientes, hacer un juego, o agendar un especialista?';
+  return 'Te leo. ¿Prefieres hablar de cómo te sientes, hacer un juego, o relajarte con música?';
 }
 
 // =========================
@@ -535,6 +391,154 @@ function MemoryGameScreen() {
 
         <div class="row" style="margin-top:14px">
           <button class="btn gray full" id="memResetBtn" type="button">Reiniciar</button>
+        </div>
+      `}
+    </section>
+  `;
+}
+
+function PairsGameScreen() {
+  const items = state.pairs.targetPairs;
+
+  const leftHTML = items.map((p, i) => {
+    const done = state.pairs.matched.has(i);
+    const active = state.pairs.selectedLeft === i;
+    return `
+      <button class="word-chip ${active ? 'active' : ''}" data-pair-left="${i}" type="button" ${done ? 'disabled' : ''}>
+        ${escapeHtml(p.left)} ${done ? '✅' : ''}
+      </button>
+    `;
+  }).join('');
+
+  const rightsHTML = items
+    .map((p, i) => ({ i, right: p.right }))
+    .sort(() => Math.random() - 0.5)
+    .map(x => {
+      const done = state.pairs.matched.has(x.i);
+      return `
+        <button class="word-chip" data-pair-right="${x.i}" type="button" ${done ? 'disabled' : ''}>
+          ${escapeHtml(x.right)}
+        </button>
+      `;
+    }).join('');
+
+  const allDone = state.pairs.matched.size === items.length;
+
+  return `
+    <section class="screen">
+      <div class="topbar">
+        <button class="back-btn" data-go="games" type="button">←</button>
+        <h2 class="title-center">Pares</h2>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="hero blue" style="text-align:center">
+        <h3>Une palabra con su símbolo</h3>
+        <p>Primero toca una palabra, luego toca su símbolo.</p>
+      </div>
+
+      ${allDone ? `
+        <div class="hero green" style="text-align:center">
+          <h3>¡Excelente! 🎉</h3>
+          <p>Completaste todos los pares.</p>
+          <button class="btn full" id="pairsResetBtn" type="button">Jugar de nuevo</button>
+        </div>
+      ` : ''}
+
+      <div class="card">
+        <h3>Palabras</h3>
+        <div class="word-grid">${leftHTML}</div>
+      </div>
+
+      <div class="card">
+        <h3>Símbolos</h3>
+        <div class="word-grid">${rightsHTML}</div>
+      </div>
+    </section>
+  `;
+}
+
+function SequencesGameScreen() {
+  const seq = state.sequences.target;
+  const missingAnswer = seq[2] + 2;
+
+  const options = [missingAnswer, missingAnswer + 2, missingAnswer - 2, missingAnswer + 4]
+    .sort(() => Math.random() - 0.5);
+
+  const seqHtml = seq.map(n => `<div class="seq-item">${n == null ? '❓' : n}</div>`).join('');
+
+  const optsHtml = options.map(n => `
+    <button class="btn full" data-seq-pick="${n}" type="button">${n}</button>
+  `).join('');
+
+  return `
+    <section class="screen">
+      <div class="topbar">
+        <button class="back-btn" data-go="games" type="button">←</button>
+        <h2 class="title-center">Secuencias</h2>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="hero blue" style="text-align:center">
+        <h3>Completa la secuencia</h3>
+        <p>Elige el número que falta.</p>
+      </div>
+
+      <div class="card">
+        <div class="sequence">${seqHtml}</div>
+      </div>
+
+      ${state.sequences.showResult === 'ok' ? `
+        <div class="hero green" style="text-align:center">
+          <h3>¡Correcto! ✅</h3>
+          <button class="btn full" id="seqNextBtn" type="button">Siguiente</button>
+        </div>
+      ` : state.sequences.showResult === 'fail' ? `
+        <div class="hero red" style="text-align:center">
+          <h3>Ups 😅</h3>
+          <p>Intenta de nuevo.</p>
+          <button class="btn full" id="seqRetryBtn" type="button">Reintentar</button>
+        </div>
+      ` : `
+        <div class="row">${optsHtml}</div>
+      `}
+    </section>
+  `;
+}
+
+function WordsGameScreen() {
+  const pool = state.words.pool;
+  const picked = new Set(state.words.picked);
+
+  const chips = pool.map(w => `
+    <button class="word-chip ${picked.has(w) ? 'active' : ''}" data-word="${escapeHtml(w)}" type="button" ${state.words.done ? 'disabled' : ''}>
+      ${escapeHtml(w)}
+    </button>
+  `).join('');
+
+  return `
+    <section class="screen">
+      <div class="topbar">
+        <button class="back-btn" data-go="games" type="button">←</button>
+        <h2 class="title-center">Palabras</h2>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="hero blue" style="text-align:center">
+        <h3>Elige ${state.words.goal} palabras</h3>
+        <p>Selecciona palabras que te hagan sentir bien.</p>
+      </div>
+
+      ${state.words.done ? `
+        <div class="hero green" style="text-align:center">
+          <h3>¡Listo! 🌟</h3>
+          <p>Elegiste: <b>${escapeHtml(state.words.picked.join(', '))}</b></p>
+          <button class="btn full" id="wordsResetBtn" type="button">Jugar de nuevo</button>
+        </div>
+      ` : `
+        <div class="card">
+          <h3>Palabras</h3>
+          <div class="grid2">${chips}</div>
         </div>
       `}
     </section>
@@ -687,14 +691,88 @@ function AssistantScreen() {
   `;
 }
 
+// ✅ RELAJACIÓN (con YouTube iframe)
 function RelaxationMusicScreen() {
+  const tracks = [
+    { id:'rain',       title:'Lluvia suave',        emoji:'☁️', color:'#4A90E2', videoId:'Gnykob42-sk' },
+    { id:'ocean',      title:'Olas del mar',        emoji:'🌊', color:'#5BA3D0', videoId:'lFQY0sH1U_c' },
+    { id:'forest',     title:'Sonidos del bosque',  emoji:'🌬️', color:'#7ED321', videoId:'DUmn3fwBgww' },
+    { id:'meditation', title:'Meditación guiada',   emoji:'🎵', color:'#9B59B6', videoId:'IShkpOm63gg' }
+  ];
+
+  const { selectedTrackId, isPlaying } = state.relaxation;
+  const selected = tracks.find(t => t.id === selectedTrackId) || null;
+
+  const listHTML = tracks.map(t => {
+    const isSelected = t.id === selectedTrackId;
+    return `
+      <button
+        class="relax-track ${isSelected ? 'active' : ''}"
+        data-relax-select="${t.id}"
+        type="button"
+      >
+        <div class="relax-left" style="background:${t.color}30">
+          <div class="relax-emoji">${t.emoji}</div>
+        </div>
+        <div class="relax-info">
+          <h3>${escapeHtml(t.title)}</h3>
+          ${isSelected && isPlaying ? `<p class="relax-playing">▶ Reproduciendo...</p>` : ``}
+        </div>
+      </button>
+    `;
+  }).join('');
+
+  const playerHTML = selected ? `
+    <div class="relax-player hero blue">
+      <div style="text-align:center;margin-bottom:10px">
+        <div style="font-size:56px">${selected.emoji}</div>
+        <h3 style="color:#fff;margin:6px 0 0">${escapeHtml(selected.title)}</h3>
+      </div>
+
+      <div class="relax-iframe-wrap">
+        <iframe
+          width="100%"
+          height="200"
+          src="https://www.youtube.com/embed/${selected.videoId}?autoplay=${isPlaying ? '1' : '0'}&controls=1&modestbranding=1&rel=0"
+          title="${escapeHtml(selected.title)}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <div class="relax-controls">
+        <button class="relax-playbtn" id="relaxToggleBtn" type="button" aria-label="Play/Pause">
+          ${isPlaying ? '⏸️' : '▶️'}
+        </button>
+      </div>
+
+      <div class="relax-hint">
+        <p>Usa los controles del video para ajustar el volumen</p>
+      </div>
+    </div>
+  ` : `
+    <div class="card" style="text-align:center">
+      <div style="font-size:64px;opacity:.6;margin-bottom:8px">🎧</div>
+      <p style="color:#777;font-weight:800">Selecciona una música para comenzar</p>
+    </div>
+  `;
+
   return `
     <section class="screen">
-      <h1>Relajación</h1>
-      <div class="card">
-        <p>Placeholder de música/sonidos.</p>
+      <div class="topbar">
+        <button class="back-btn" data-go="home" type="button">←</button>
+        <h2 class="title-center">Relajación</h2>
+        <div class="spacer"></div>
       </div>
-      <button class="btn outline full" data-go="home" type="button">Volver</button>
+
+      <h1 style="text-align:center;margin-bottom:14px">Música de Relajación</h1>
+
+      <div class="relax-list">
+        ${listHTML}
+      </div>
+
+      ${playerHTML}
     </section>
   `;
 }
@@ -1091,12 +1169,10 @@ function wireScreenEvents() {
       if (!text) return;
 
       state.assistant.messages.push({ role: 'user', text });
-      const reply = assistantReply(text);
-      state.assistant.messages.push({ role: 'bot', text: reply });
+      state.assistant.messages.push({ role: 'bot', text: assistantReply(text) });
 
       render();
 
-      // scroll abajo
       const log = document.getElementById('chatLog');
       if (log) log.scrollTop = log.scrollHeight;
     };
@@ -1108,10 +1184,28 @@ function wireScreenEvents() {
       chatText.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') send();
       });
-      // scroll abajo al entrar
+
       const log = document.getElementById('chatLog');
       if (log) log.scrollTop = log.scrollHeight;
     }
+  }
+
+  // Relaxation: seleccionar pista
+  $app.querySelectorAll('[data-relax-select]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.relaxation.selectedTrackId = btn.dataset.relaxSelect;
+      state.relaxation.isPlaying = true;
+      render();
+    });
+  });
+
+  // Relaxation: play/pause
+  const relaxToggleBtn = document.getElementById('relaxToggleBtn');
+  if (relaxToggleBtn) {
+    relaxToggleBtn.addEventListener('click', () => {
+      state.relaxation.isPlaying = !state.relaxation.isPlaying;
+      render();
+    });
   }
 }
 
